@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Kavach" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/kavach_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+    <color name="kavach_bg">#0B1020</color>
+    <color name="ic_bg">#0B1020</color>
+</resources>

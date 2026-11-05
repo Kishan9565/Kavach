@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KAVACH</string>
+    <string name="access_label">KAVACH Agent</string>
+    <string name="notif_label">KAVACH Notifications</string>
+    <string name="access_desc">KAVACH reads the visible screen and performs taps, typing and scrolling only for tasks you start. It never acts on banking or payment apps, never types into password fields, and always shows a Stop button while it works.</string>
+</resources>
