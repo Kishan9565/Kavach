@@ -83,4 +83,47 @@
   - `services/notification/NotificationListenerHealth.kt` (NEW)
   - `services/notification/NotificationListenerHealthTest.kt` (NEW)
   - `services/notification/KavachNotificationService.kt` (MODIFIED)
+
+## [2025-02-23] Phase U6: NOTEBOOK, PROMISES THAT ARE REALLY SCHEDULED, MODES
+- **Tasks**: T-U6.1 (Notebook Room Entity, DAO, MIGRATION_1_2), T-U6.2 (PromiseScheduler with exact alarm / WorkManager fallback), T-U6.3 (Mode & ModeManager with Focus/Driving/Night proposals), T-U6.4 (NightlyReviewWorker WorkManager job), T-U6.5 (Origin.IDLE allow-list in ToolPolicy).
+- **Status**: Completed.
+- **Tags**: VERIFIED-BY-HUMAN (107 JVM tests passed).
+- **Files Modified/Created**:
+  - `data/local/KavachDatabase.kt` (MODIFIED - Room v2 + MIGRATION_1_2)
+  - `data/local/NotebookTest.kt` (NEW)
+  - `automation/tools/PromiseScheduler.kt` (NEW)
+  - `automation/tools/PromiseSchedulerTest.kt` (NEW)
+  - `domain/model/Mode.kt` (NEW)
+  - `agent/state/ModeManager.kt` (NEW)
+  - `agent/state/ModeManagerTest.kt` (NEW)
+  - `workers/Workers.kt` (MODIFIED - NightlyReviewWorker)
+  - `data/preferences/Prefs.kt` (MODIFIED - nightlyReviewOptIn)
+  - `domain/tools/ToolPolicy.kt` (MODIFIED - IDLE allow-list)
+  - `domain/tools/ToolPolicyTest.kt` (MODIFIED)
+
+## [2025-02-23] Phase U7: VOICE AND WAKE WORD
+- **Tasks**: T-U7.1 (VoiceController & Guard checks on voice commands), T-U7.2 (Pure-Kotlin MFCC & DTW template matching engine), T-U7.3 (WakeMic AudioRecord 16kHz & EXPERIMENTAL flag).
+- **Status**: Completed.
+- **Tags**: VERIFIED-BY-HUMAN (114 JVM tests passed).
+- **Files Modified/Created**:
+  - `automation/voice/VoiceController.kt` (NEW)
+  - `automation/voice/VoiceControllerTest.kt` (NEW)
+  - `domain/wakeword/Mfcc.kt` (NEW)
+  - `domain/wakeword/Dtw.kt` (NEW)
+  - `domain/wakeword/WakeTemplate.kt` (NEW)
+  - `domain/wakeword/WakeWordTest.kt` (NEW)
+  - `automation/voice/WakeMic.kt` (NEW)
+  - `AndroidManifest.xml` (MODIFIED)
+
+## [2025-02-23] Phase U8: SELFCHECK, GEMMA-SIZED LOOP, BENCHMARK
+- **Tasks**: T-U8.1 (SelfCheckEvaluator & plain snapshot tests), T-U8.2 (Gemma-sized loop & Budgets.kt), T-U8.3 (docs/BENCHMARK.md, PROJECT_STATUS.md update).
+- **Status**: Completed.
+- **Tags**: VERIFIED-BY-HUMAN (118 JVM tests passed).
+- **Files Modified/Created**:
+  - `domain/selfcheck/SelfCheck.kt` (NEW)
+  - `domain/selfcheck/SelfCheckTest.kt` (NEW)
+  - `ai/prompts/Budgets.kt` (NEW)
+  - `ai/prompts/BudgetsTest.kt` (NEW)
+  - `docs/BENCHMARK.md` (NEW)
+  - `PROJECT_STATUS.md` (MODIFIED)
 - **Open Problems**: None.

@@ -54,6 +54,10 @@ class Prefs(ctx: Context) {
         get() = sp.getBoolean("useGpu", false)
         set(v) = sp.edit().putBoolean("useGpu", v).apply()
 
+    var nightlyReviewOptIn: Boolean
+        get() = sp.getBoolean("nightlyReviewOptIn", false)
+        set(v) = sp.edit().putBoolean("nightlyReviewOptIn", v).apply()
+
     // ---- External automation (Tasker / MacroDroid): OFF by default, explicit opt-in
     var externalEnabled: Boolean
         get() = sp.getBoolean("extEnabled", false)

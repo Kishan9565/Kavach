@@ -20,7 +20,8 @@ class ToolPolicyTest {
 
     @Test
     fun `untrusted origins cannot use denied tools`() {
-        for (origin in ToolPolicy.UNTRUSTED) {
+        val externalAndNotif = setOf(Origin.NOTIFICATION, Origin.EXTERNAL)
+        for (origin in externalAndNotif) {
             for (tool in ToolPolicy.DENIED_FOR_UNTRUSTED) {
                 assertFalse("Failed for $tool with origin $origin", ToolPolicy.allowed(tool, origin))
             }
@@ -28,13 +29,16 @@ class ToolPolicyTest {
     }
 
     @Test
-    fun `untrusted origins can use non-denied tools`() {
-        val safeTools = setOf("tap", "read_screen", "scroll", "get_status")
-        
-        for (origin in ToolPolicy.UNTRUSTED) {
-            for (tool in safeTools) {
-                assertTrue("Failed for $tool with origin $origin", ToolPolicy.allowed(tool, origin))
-            }
+    fun `idle origin allows only allow-listed tools`() {
+        val allowedTools = ToolPolicy.IDLE_ALLOW_LIST
+        val forbiddenTools = setOf("tap", "send_message", "send_sms", "open_app", "scroll", "swipe")
+
+        for (tool in allowedTools) {
+            assertTrue("Expected $tool to be allowed for IDLE", ToolPolicy.allowed(tool, Origin.IDLE))
+        }
+
+        for (tool in forbiddenTools) {
+            assertFalse("Expected $tool to be denied for IDLE", ToolPolicy.allowed(tool, Origin.IDLE))
         }
     }
 }

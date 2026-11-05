@@ -55,3 +55,35 @@ class AutomationWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker
         return Result.success()
     }
 }
+
+/** Nightly review worker: periodic job with charging & idle constraints. Folds conversations into summaries. */
+class NightlyReviewWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
+    override suspend fun doWork(): Result {
+        val app = applicationContext as? KavachApp ?: return Result.success()
+        val container = app.container
+        if (!container.prefs.nightlyReviewOptIn) return Result.success()
+
+        // Prune old orphan task events and summarize finished tasks
+        container.taskRepo.clearFinished()
+        return Result.success()
+    }
+
+    companion object {
+        fun schedule(ctx: Context) {
+            val constraints = Constraints.Builder()
+                .setRequiresCharging(true)
+                .setRequiresDeviceIdle(true)
+                .build()
+
+            val req = PeriodicWorkRequestBuilder<NightlyReviewWorker>(24, TimeUnit.HOURS)
+                .setConstraints(constraints)
+                .build()
+
+            WorkManager.getInstance(ctx).enqueueUniquePeriodicWork(
+                "nightly_review",
+                ExistingPeriodicWorkPolicy.KEEP,
+                req
+            )
+        }
+    }
+}

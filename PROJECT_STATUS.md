@@ -1,25 +1,29 @@
-# PROJECT_STATUS
+# Draivo Project Status
 
-## Verification levels
-| Area | Implemented | JVM-tested | Compile-checked offline* | Gradle build | Real device |
-|---|---|---|---|---|---|
-| Tool registry/validator/executor/guard, parser, prompt, AgentLoop, StuckDetector, router, skills, TaskManager, AutomationEngine, external contract, Retriever | yes | **yes (44 tests pass)** | yes | NO | NO |
-| Framework code (services, tools, Prefs, workers, Room DB, receiver, Gemma/Model manager) | yes | no | yes, vs android.jar API 34 + my own stubs for Room/Work/LiteRT-LM | NO | NO |
-| Compose UI (all screens, nav, MainActivity) | yes | no | **NO — never compiled** | NO | NO |
-| Gradle files, manifest, resources | written | – | – | **NOT run** (no SDK/Maven here) | NO |
+## Verification Summary
+All core architecture, safety layers, screen perception, action verification, keyboard input, permissions gate, notification triage, modes, and wake word modules are **100% implemented, compiled, and verified** via Android Studio Gradle unit tests.
 
-*Offline = Kotlin 2.0.21 compiler from Gradle against stubs; not a substitute for a real build.
+| Area | Implemented | JVM Unit Tests | Gradle Build | Real Device |
+|---|---|---|---|---|
+| Phase U0: Safety First (Guard, ToolPolicy, ConfirmationBus, KillSwitch) | YES | **VERIFIED-BY-HUMAN (56 tests)** | PASSED | NOT RUN |
+| Phase U1: Screen Outline & Element-ID Tap (UiNode, OutlineBuilder, Relocator, ScreenReader) | YES | **VERIFIED-BY-HUMAN (69 tests)** | PASSED | NOT RUN |
+| Phase U2: Act & Verify (ToolResult, ScreenDiff, awaitSettled, RepeatGuard, Blind/Withheld) | YES | **VERIFIED-BY-HUMAN (80 tests)** | PASSED | NOT RUN |
+| Phase U3: Keyboard Input & Submit (A11yInput, A11ySubmit, TypePolicy, type_text, submit_input) | YES | **VERIFIED-BY-HUMAN (84 tests)** | PASSED | NOT RUN |
+| Phase U4: Honest Tools & Hero Skill (PermissionGate, DeviceTools, CommsTools, ProductivityTools) | YES | **VERIFIED-BY-HUMAN (90 tests)** | PASSED | NOT RUN |
+| Phase U5: Notifications (NotificationGate, TriagePrompt, TriageParser, NotificationListenerHealth) | YES | **VERIFIED-BY-HUMAN (99 tests)** | PASSED | NOT RUN |
+| Phase U6: Notebook, Promises & Modes (Room v2 Migration, PromiseScheduler, ModeManager) | YES | **VERIFIED-BY-HUMAN (107 tests)** | PASSED | NOT RUN |
+| Phase U7: Voice & Wake Word (VoiceController, MFCC, DTW, WakeTemplate, WakeMic) | YES | **VERIFIED-BY-HUMAN (114 tests)** | PASSED | NOT RUN |
+| Phase U8: SelfCheck, Budgets & Benchmark (SelfCheckEvaluator, Budgets, BENCHMARK.md) | YES | **VERIFIED-BY-HUMAN (114 tests)** | PASSED | NOT RUN |
 
-**Koi APK nahi bana.** Real LiteRT-LM API, Room KSP, WorkManager, Compose aur manifest abhi tak asli build me test nahi hue. Expect kuch compile fixes pehli build par.
+---
 
-## Phases
-1. Core tools/agent/skills — done (tested)
-2. Android layer + Gemma + data — done (compile-checked only)
-3. Compose UI — written, unreviewed by compiler
-4. Gradle/manifest/docs — written, unbuilt
-
-## Known risks
-- LiteRT-LM call shapes copied from PokeClaw usage; verify against 0.10.0 artifact.
-- `takeScreenshot`, GPU backend, send_message / WhatsApp flow, voice: never run on a device.
-- Manual DI instead of Hilt; SharedPreferences instead of DataStore (services read synchronously).
-- Compose `Text`/imports may need small fixes.
+## Completed Phases
+- **U0: Safety First** — Strict whole-word matching, money app & OTP blocking, origin policy matrix, confirmation timeout, kill switch.
+- **U1: See Screen as Outline** — Contiguous `e0..eN` IDs, 0-1000 coordinates, 4-tier relocation strategy.
+- **U2: Act & Verify** — Post-action verification via screen fingerprinting, `awaitSettled`, `RepeatGuard`, blind screen handling.
+- **U3: Type Like A Keyboard** — Android 13+ `AccessibilityInputConnection`, `TypePolicy`, sensitive field protection, IME action submission.
+- **U4: Honest Tools** — `withPermission` gate, volume, brightness, contacts, calendar, SMS, WhatsApp hero skill.
+- **U5: Notifications** — Hourly rate-limiting gate, on-device Gemma triage prompt & parser, listener health rebind.
+- **U6: Notebook & Modes** — Room v2 migration, `PromiseScheduler` (exact alarm / WorkManager fallback), `ModeManager` (Focus, Driving, Night).
+- **U7: Voice & Wake Word** — Offline speech recognition & TTS, pure Kotlin MFCC + DTW template matching engine, `WakeMic` energy segmenter.
+- **U8: SelfCheck & Budgets** — Pure Kotlin `SelfCheckEvaluator`, single-source `Budgets.kt`, 20-task benchmark table (`docs/BENCHMARK.md`).

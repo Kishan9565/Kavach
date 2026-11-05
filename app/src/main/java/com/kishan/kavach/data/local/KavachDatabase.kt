@@ -1,10 +1,22 @@
 package com.kishan.kavach.data.local
 
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "notes") data class NoteEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val title: String, val text: String, val createdAt: Long, val updatedAt: Long)
-@Entity(tableName = "memories") data class MemoryEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val text: String, val createdAt: Long)
+
+@Entity(tableName = "memories")
+data class MemoryEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val kind: String = "fact",
+    val text: String,
+    val createdAt: Long,
+    val dueAt: Long? = null,
+    val source: String = "user"
+)
+
 @Entity(tableName = "messages") data class MessageEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val role: String, val text: String, val taskId: Long?, val createdAt: Long)
 @Entity(tableName = "tasks") data class TaskEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0, val request: String, val status: String, val progress: Int,
@@ -30,6 +42,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao interface MemoryDao {
     @Query("SELECT * FROM memories ORDER BY createdAt DESC") fun observe(): Flow<List<MemoryEntity>>
     @Query("SELECT * FROM memories ORDER BY createdAt DESC") suspend fun all(): List<MemoryEntity>
+    @Query("SELECT * FROM memories WHERE kind = :kind ORDER BY createdAt DESC") suspend fun byKind(kind: String): List<MemoryEntity>
     @Insert suspend fun insert(e: MemoryEntity): Long
     @Query("UPDATE memories SET text = :text WHERE id = :id") suspend fun update(id: Long, text: String): Int
     @Query("DELETE FROM memories WHERE id = :id") suspend fun delete(id: Long): Int
@@ -78,10 +91,18 @@ import kotlinx.coroutines.flow.Flow
     @Query("UPDATE automations SET lastRunAt = :at, lastResult = :result WHERE id = :id") suspend fun recordRun(id: Long, at: Long, result: String): Int
 }
 
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE memories ADD COLUMN kind TEXT NOT NULL DEFAULT 'fact'")
+        db.execSQL("ALTER TABLE memories ADD COLUMN dueAt INTEGER")
+        db.execSQL("ALTER TABLE memories ADD COLUMN source TEXT NOT NULL DEFAULT 'user'")
+    }
+}
+
 @Database(
     entities = [NoteEntity::class, MemoryEntity::class, MessageEntity::class, TaskEntity::class, TaskEventEntity::class,
         ReminderEntity::class, TodoEntity::class, AutomationEntity::class],
-    version = 1, exportSchema = false,
+    version = 2, exportSchema = false,
 )
 abstract class KavachDatabase : RoomDatabase() {
     abstract fun notes(): NoteDao

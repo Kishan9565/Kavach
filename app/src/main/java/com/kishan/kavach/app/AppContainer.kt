@@ -45,7 +45,9 @@ class AppContainer(val app: Application) : AccessHost {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override val prefs = Prefs(app)
-    val db: KavachDatabase = Room.databaseBuilder(app, KavachDatabase::class.java, "kavach.db").build()
+    val db: KavachDatabase = Room.databaseBuilder(app, KavachDatabase::class.java, "kavach.db")
+        .addMigrations(com.kishan.kavach.data.local.MIGRATION_1_2)
+        .build()
     val notes = NoteRepositoryImpl(db.notes())
     val memories = MemoryRepositoryImpl(db.memories())
     val chat = ChatRepositoryImpl(db.messages())
