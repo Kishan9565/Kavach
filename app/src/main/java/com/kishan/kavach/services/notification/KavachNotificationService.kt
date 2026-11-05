@@ -26,7 +26,15 @@ class KavachNotificationService : NotificationListenerService() {
     private val lastReply = HashMap<String, String>()
     private val host: AccessHost? get() = (application as? AccessHostProvider)?.host
 
-    override fun onListenerDisconnected() { requestRebind(ComponentName(this, KavachNotificationService::class.java)) }
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        NotificationListenerHealth.connected = true
+    }
+
+    override fun onListenerDisconnected() {
+        NotificationListenerHealth.connected = false
+        requestRebind(ComponentName(this, KavachNotificationService::class.java))
+    }
     override fun onDestroy() { scope.cancel(); super.onDestroy() }
     override fun onNotificationRemoved(sbn: StatusBarNotification) { NotificationStore.remove(sbn.key) }
 

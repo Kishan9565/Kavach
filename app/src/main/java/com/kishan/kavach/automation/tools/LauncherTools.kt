@@ -37,7 +37,7 @@ class LauncherTools(private val app: Context) {
         val expect = a.str("expect")
         if (r.success && !expect.isNullOrBlank() && c != null && !c.screenContains(expect, 4000))
             ToolResult.fail(ErrorCode.EXECUTION_FAILED, "App opened but '$expect' not visible", retryable = true)
-        else r.copy(message = "Opened ${hit.loadLabel(pm)}")
+        else ToolResult.ok("Opened ${hit.loadLabel(pm)}")
     }
 
     val launchSettings = SimpleTool("launch_settings", "Open a system settings page", ToolGroup.UTILITY,

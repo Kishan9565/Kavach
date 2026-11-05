@@ -6,3 +6,9 @@
 /app/build/
 .DS_Store
 *.litertlm
+.artifacts/
+*.apk
+*.aar
+captures/
+.externalNativeBuild/
+.cxx/

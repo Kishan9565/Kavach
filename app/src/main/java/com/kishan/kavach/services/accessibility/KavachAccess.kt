@@ -263,13 +263,16 @@ class KavachAccess : AccessibilityService(), ScreenController {
         return null
     }
 
-    private suspend fun dispatch(path: Path, durationMs: Long): Boolean = suspendCancellableCoroutine { cont ->
-        val g = GestureDescription.Builder().addStroke(GestureDescription.StrokeDescription(path, 0, durationMs.coerceAtLeast(1))).build()
-        val accepted = dispatchGesture(g, object : GestureResultCallback() {
-            override fun onCompleted(d: GestureDescription?) { if (cont.isActive) cont.resume(true) }
-            override fun onCancelled(d: GestureDescription?) { if (cont.isActive) cont.resume(false) }
-        }, null)
-        if (!accepted && cont.isActive) cont.resume(false)
+    private suspend fun dispatch(path: Path, durationMs: Long): Boolean {
+        currentCoroutineContext().ensureActive()
+        return suspendCancellableCoroutine { cont ->
+            val g = GestureDescription.Builder().addStroke(GestureDescription.StrokeDescription(path, 0, durationMs.coerceAtLeast(1))).build()
+            val accepted = dispatchGesture(g, object : GestureResultCallback() {
+                override fun onCompleted(d: GestureDescription?) { if (cont.isActive) cont.resume(true) }
+                override fun onCancelled(d: GestureDescription?) { if (cont.isActive) cont.resume(false) }
+            }, null)
+            if (!accepted && cont.isActive) cont.resume(false)
+        }
     }
 
     override suspend fun snapshot(): ScreenSnapshot? = withContext(Dispatchers.Default) {

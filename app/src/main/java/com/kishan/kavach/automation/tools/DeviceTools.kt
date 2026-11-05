@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
@@ -11,13 +12,15 @@ import android.os.Build
 import android.os.Environment
 import android.os.StatFs
 import android.provider.Settings
+import com.kishan.kavach.automation.accessibility.ScreenBridge
 import com.kishan.kavach.domain.tools.*
+import com.kishan.kavach.services.accessibility.KavachAccess
 import com.kishan.kavach.services.notification.NotificationStore
 import java.util.Locale
 
 /** Deterministic device info straight from Android APIs: no Accessibility, no Gemma. */
 class DeviceTools(private val app: Context) {
-    fun all(): List<Tool> = listOf(battery, storage, deviceInfo, androidVersion, installedApps, bluetooth, network, notificationSummary)
+    fun all(): List<Tool> = listOf(battery, storage, deviceInfo, androidVersion, installedApps, bluetooth, network, notificationSummary, setVolume, setBrightness)
 
     private fun gb(b: Long) = String.format(Locale.US, "%.1f GB", b / 1_073_741_824.0)
 
@@ -82,5 +85,35 @@ class DeviceTools(private val app: Context) {
     val notificationSummary = SimpleTool("get_notification_summary", "Recent notifications captured since app start (needs Notification Access)", ToolGroup.DEVICE,
         permissions = listOf("notification_access")) {
         ToolResult.ok(NotificationStore.summaryText(), mapOf("count" to NotificationStore.items.value.size))
+    }
+
+    val setVolume = SimpleTool("set_volume", "Set device volume for a stream (media, ring, alarm, notification) from 0-100", ToolGroup.DEVICE,
+        listOf(
+            ParamSpec("stream", ParamType.STRING, "media, ring, alarm, notification", enumValues = listOf("media", "ring", "alarm", "notification")),
+            ParamSpec("level", ParamType.INTEGER, "0-100 percentage", min = 0.0, max = 100.0)
+        )) { a ->
+        val am = app.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val streamType = when (a.string("stream").lowercase()) {
+            "media" -> AudioManager.STREAM_MUSIC
+            "ring" -> AudioManager.STREAM_RING
+            "alarm" -> AudioManager.STREAM_ALARM
+            "notification" -> AudioManager.STREAM_NOTIFICATION
+            else -> AudioManager.STREAM_MUSIC
+        }
+        val pct = a.int("level")!!.coerceIn(0, 100)
+        val maxVol = am.getStreamMaxVolume(streamType)
+        val targetVol = (pct * maxVol / 100)
+        am.setStreamVolume(streamType, targetVol, AudioManager.FLAG_SHOW_UI)
+        ToolResult.ok("Volume for ${a.string("stream")} set to $pct% ($targetVol/$maxVol)")
+    }
+
+    val setBrightness = SimpleTool("set_brightness", "Open system display brightness settings screen", ToolGroup.DEVICE) {
+        val i = Intent(Settings.ACTION_DISPLAY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            (KavachAccess.instance ?: app).startActivity(i)
+            ToolResult.ok("Opened Display Brightness Settings")
+        } catch (e: Exception) {
+            ToolResult.fail(ErrorCode.EXECUTION_FAILED, "Could not open display settings: ${e.message}")
+        }
     }
 }

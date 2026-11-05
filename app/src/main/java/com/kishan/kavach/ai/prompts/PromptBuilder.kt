@@ -4,10 +4,7 @@ import com.kishan.kavach.domain.tools.Tool
 
 data class HistoryItem(val action: String, val observation: String)
 
-/**
- * Builds compact prompts for a small on-device model. Tool list is limited to the groups chosen by the
- * router, history is capped, and all untrusted content (screen, notes, notifications) is fenced + sanitised.
- */
+
 class PromptBuilder(private val maxHistory: Int = 5) {
 
     fun system(tools: List<Tool>): String = buildString {

@@ -5,16 +5,18 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.ContactsContract
+import android.telephony.SmsManager
 import com.kishan.kavach.automation.accessibility.ScreenBridge
+import com.kishan.kavach.core.permissions.withPermission
 import com.kishan.kavach.data.preferences.Prefs
 import com.kishan.kavach.domain.tools.*
 import com.kishan.kavach.services.accessibility.KavachAccess
 import kotlinx.coroutines.delay
 
 class CommsTools(private val app: Context, private val prefs: Prefs) {
-    fun all(): List<Tool> = listOf(getContacts, createDraft, sendMessage, autoReply)
+    fun all(): List<Tool> = listOf(getContacts, searchContacts, sendSms, createDraft, sendMessage, autoReply)
 
-    /** (name, number) pairs; needs READ_CONTACTS (checked by the executor before this runs). */
+    /** (name, number) pairs; needs READ_CONTACTS. */
     private fun lookup(name: String, limit: Int): List<Pair<String, String>> {
         val out = LinkedHashMap<String, String>()
         app.contentResolver.query(
@@ -50,8 +52,41 @@ class CommsTools(private val app: Context, private val prefs: Prefs) {
 
     val getContacts = SimpleTool("get_contacts", "Look up contacts by name (max 5 results; names and numbers only)", ToolGroup.COMMS,
         listOf(ParamSpec("query", ParamType.STRING, "name part", maxLength = 40)), permissions = listOf(Manifest.permission.READ_CONTACTS)) { a ->
-        val l = lookup(a.string("query"), 5)
-        if (l.isEmpty()) ToolResult.ok("No contact found") else ToolResult.ok(l.joinToString("\n") { "${it.first}: ${it.second}" }, mapOf("count" to l.size))
+        withPermission(app, Manifest.permission.READ_CONTACTS, "Contacts") {
+            val l = lookup(a.string("query"), 5)
+            if (l.isEmpty()) ToolResult.ok("No contact found") else ToolResult.ok(l.joinToString("\n") { "${it.first}: ${it.second}" }, mapOf("count" to l.size.toString()))
+        }
+    }
+
+    val searchContacts = SimpleTool("search_contacts", "Search contacts by query (returns names and count)", ToolGroup.COMMS,
+        listOf(ParamSpec("query", ParamType.STRING, "name part", maxLength = 40)), permissions = listOf(Manifest.permission.READ_CONTACTS)) { a ->
+        withPermission(app, Manifest.permission.READ_CONTACTS, "Contacts") {
+            val l = lookup(a.string("query"), 10)
+            val namesOnly = l.map { it.first }
+            if (namesOnly.isEmpty()) ToolResult.ok("No contact found")
+            else ToolResult.ok("${namesOnly.size} contact(s) found: ${namesOnly.joinToString(", ")}", mapOf("count" to namesOnly.size.toString()))
+        }
+    }
+
+    val sendSms = SimpleTool("send_sms", "Send an SMS message after confirmation", ToolGroup.COMMS,
+        listOf(ParamSpec("number", ParamType.STRING, "phone number", maxLength = 16), ParamSpec("text", ParamType.STRING, "SMS body", maxLength = 160)),
+        risk = Risk.HIGH, permissions = listOf(Manifest.permission.SEND_SMS), timeoutMs = 15_000,
+        confirm = { "Send SMS to ${it.string("number")}:\n\"${it.string("text")}\"" }) { a ->
+        withPermission(app, Manifest.permission.SEND_SMS, "SMS") {
+            val number = a.string("number").filter { it.isDigit() || it == '+' }
+            val text = a.string("text")
+            if (number.length < 3 || text.isBlank()) {
+                return@withPermission ToolResult.fail(ErrorCode.INVALID_ARGS, "Invalid number or empty SMS text")
+            }
+            try {
+                @Suppress("DEPRECATION")
+                val smsManager = SmsManager.getDefault()
+                smsManager.sendTextMessage(number, null, text, null, null)
+                ToolResult.ok("SMS sent to $number")
+            } catch (e: Exception) {
+                ToolResult.fail(ErrorCode.EXECUTION_FAILED, "Failed to send SMS: ${e.message}")
+            }
+        }
     }
 
     val createDraft = SimpleTool("create_message_draft", "Open a message draft with the text filled in. Does NOT send.", ToolGroup.COMMS, msgParams) { a ->
